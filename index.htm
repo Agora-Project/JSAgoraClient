@@ -1,0 +1,50 @@
+<head>
+    <META charset="utf-8">
+    <title>Agora</title>
+    <script type="text/javascript" src="js/libs/java_socket_bridge.js"></script>
+    <script type="text/javascript" src="js/libs/JSAgoraLib.js"></script>
+    <script type="text/javascript" src="http://d3js.org/d3.v3.js"></script>
+    <script type="text/javascript">
+        function logIn() {
+            try {
+                if (JAVA_READY_FLAG === true) {
+                    var bridge = getJAgoraBridge();
+                    bridge.logIn(d3.select("#usernameField").node().value, d3.select("#passwordField").node().value);
+                }
+                else alert("Applet not yet ready.");
+            }
+            catch (err) {
+                alert(err.stack);
+            }
+            d3.select("#usernameField").property("value", "");
+            d3.select("#passwordField").property("value", "");
+        }
+    </script>
+</head>
+
+<body>
+
+    <div>
+        <applet id="JAgoraJSBridge" archive="JAgoraLib.jar" code="org.agora.lib.JAgoraJSBridge.class" width="1" height="1"></applet>
+        <div id="AppBody">
+            <div id="InputPanel">
+                Login
+                <p></p>
+                
+                UserName:
+                
+                <input type="text" id="usernameField">
+                
+                Password:
+                
+                <input type="password" id="passwordField">
+                
+                <button type="button" onclick="logIn()">Submit</button>
+            </div>
+            <div id="GraphPanel">
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
