@@ -54,9 +54,12 @@
             var posts = graph.getNodes();
             var edges = graph.getAttacks();
             
-            jsgraph.nodes = posts;
-            
             var edge, i, post, j;
+            
+            for (i = 0; i < posts.length; i++) {
+                jsgraph.nodes.push({post : posts[i]});
+            }
+            
             for (i = 0; i < edges.length; i++) {
                 edge = edges[i];
                 var target = null, origin = null;
@@ -76,7 +79,39 @@
                 
             }
             
+            var force = d3.layout.force()
+                 .nodes(jsgraph.nodes)
+                 .links(jsgraph.links)
+                 .size([1000, 540])
+                 .linkDistance([50])
+                 .charge([-100])
+                 .start();
             
+            edges = svg.selectAll("line")
+                .data(jsgraph.links)
+                .enter()
+                .append("line")
+                .style("stroke", "#ccc")
+                .style("stroke-width", 1);
+        
+            var nodes = svg.selectAll("circle")
+                .data(jsgraph.nodes)
+                .enter()
+                .append("circle")
+                .attr("r", 10)
+                .call(force.drag);
+            
+            force.on("tick", function() {
+
+                edges.attr("x1", function(d) { return d.source.x; })
+                     .attr("y1", function(d) { return d.source.y; })
+                     .attr("x2", function(d) { return d.target.x; })
+                     .attr("y2", function(d) { return d.target.y; });
+
+                nodes.attr("cx", function(d) { return d.x; })
+                     .attr("cy", function(d) { return d.y; });
+
+            });
             
         }
     </script>
@@ -110,7 +145,10 @@
         </div>
     </div>
     <script type="text/javascript">
-        var svg = d3.select("#GraphPanel").append("svg");
+        var svg = d3.select("#GraphPanel")
+                .append("svg")
+                .attr("width", 1000)
+                .attr("height", 540);
     </script>
 </body>
 </html>
