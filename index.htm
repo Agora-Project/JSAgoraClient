@@ -1,22 +1,83 @@
 <head>
     <META charset="utf-8">
     <title>Agora</title>
+    <style type="text/css">
+        .inactive {
+            display: none;
+        } 
+        #AppBody {
+            border: 1px solid #e3e3e3;
+            border-radius: 4px;
+            width: 1320px;
+            height: 540px;
+            position: relative;
+            overflow: hidden;
+        }
+        #InputPanel {
+            width: 280px;
+            height: 500px;
+            padding: 20px 19px 20px 20px;
+            background-color: #f5f5f5;
+            border-right: 1px solid #e3e3e3;
+            box-shadow: inset 0 1px 1px rgba(0,0,0,0.05);
+            position: absolute;
+            left: 0;
+        } 
+        #GraphPanel {
+            width: 1000px;
+            height: 540px;
+            position: absolute;
+            left: 320px;
+        } 
+    </style>
     <script type="text/javascript" src="js/libs/java_socket_bridge.js"></script>
     <script type="text/javascript" src="http://d3js.org/d3.v3.js"></script>
     <script type="text/javascript">
         function logIn() {
-            try {
                 if (JAVA_READY_FLAG === true) {
                     var bridge = getJAgoraBridge();
                     bridge.logIn(d3.select("#usernameField").node().value, d3.select("#passwordField").node().value);
+                    loadGraph();
                 }
                 else alert("Applet not yet ready.");
-            }
-            catch (err) {
-                alert(err.stack);
-            }
             d3.select("#usernameField").property("value", "");
             d3.select("#passwordField").property("value", "");
+        }
+        
+    var jsgraph = {
+                nodes : [],
+                links : []
+            };
+        function loadGraph() {
+            var bridge = getJAgoraBridge();
+            var graph = bridge.getThread(1);
+            var posts = graph.getNodes();
+            var edges = graph.getAttacks();
+            
+            jsgraph.nodes = posts;
+            
+            var edge, i, post, j;
+            for (i = 0; i < edges.length; i++) {
+                edge = edges[i];
+                var target = null, origin = null;
+                for (j = 0; j < posts.length; j++) {
+                    post = posts[j];
+                    if (post.getID().equals(edge.getTarget().getID())) {
+                        target = j;
+                    }
+                    if (post.getID().equals(edge.getOrigin().getID())) {
+                        origin = j;
+                    }
+                    if (target != null && origin != null) {
+                        jsgraph.links.push({source : origin, target : target});
+                        break;
+                    }
+                }
+                
+            }
+            
+            
+            
         }
     </script>
 </head>
@@ -26,24 +87,30 @@
     <div>
         <applet id="JAgoraJSBridge" archive="JAgoraLib.jar" code="org.agora.lib.JAgoraJSBridge.class" width="1" height="1"></applet>
         <div id="AppBody">
-            <div id="InputPanel">
-                Login
-                <p></p>
-                
-                UserName:
-                
-                <input type="text" id="usernameField">
-                
-                Password:
-                
-                <input type="password" id="passwordField">
-                
-                <button type="button" onclick="logIn()">Submit</button>
+            <div id="InputPanel" class="panel tab-content">
+                <div id="LoginPanel" class="tab-pane active">
+                    Login
+                    <p></p>
+
+                    UserName:
+
+                    <input type="text" id="usernameField">
+
+                    Password:
+
+                    <input type="password" id="passwordField">
+
+                    <button type="button" onclick="logIn()">Submit</button>
+                </div>
+                <div id="EditPanel" class="tab-pane inactive">
+                </div>
             </div>
             <div id="GraphPanel">
             </div>
         </div>
     </div>
+    <script type="text/javascript">
+        var svg = d3.select("#GraphPanel").append("svg");
+    </script>
 </body>
 </html>
-
