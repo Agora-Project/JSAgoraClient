@@ -181,8 +181,6 @@
                         .container(d3.select("#text" + i))
                         .draw();
                 }
-                
-            d3.selectAll("tspan").attr("x", null);
             
             
             force.on("tick", function() {
@@ -200,6 +198,7 @@
              
                 texts.attr("x", function(d) { return d.x; })
                      .attr("y", function(d) { return d.y +15; });
+                texts.selectAll("tspan").attr("x", function(d) { return d.x; });
 
             });
             
