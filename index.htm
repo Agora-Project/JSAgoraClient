@@ -46,10 +46,10 @@
             d3.select("#passwordField").property("value", "");
         }
         
-    var jsgraph = {
-                nodes : [],
-                links : []
-            };
+        var jsgraph = {
+            nodes : [],
+            links : []
+        };
         function loadGraph() {
             var bridge = getJAgoraBridge();
             var graph = bridge.getThread(1);
@@ -85,8 +85,11 @@
                  .nodes(jsgraph.nodes)
                  .links(jsgraph.links)
                  .size([1000, 540])
-                 .linkDistance([300])
-                 .charge([-100])
+                 .linkDistance([150])
+                 .linkStrength(0.3)
+                 .gravity(0)
+                 .charge([-50])
+                 .chargeDistance([70])
                  .start();
             
             edges = svg.selectAll("line")
@@ -103,8 +106,8 @@
         
             var rects = svg.selectAll("g")
                 .append("rect")
-                .attr("width", 300)
-                .attr("height", 100)
+                .attr("width", 150)
+                .attr("height", 60)
                 .call(force.drag);
         
             var titles = svg.selectAll("g")
