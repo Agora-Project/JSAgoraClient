@@ -87,9 +87,9 @@
                  .size([1000, 540])
                  .linkDistance([150])
                  .linkStrength(0.3)
-                 .gravity(0)
-                 .charge([-50])
-                 .chargeDistance([70])
+                 .gravity(0.001)
+                 .charge([-100])
+                 .chargeDistance([300])
                  .start();
             
             edges = svg.selectAll("line")
@@ -97,7 +97,8 @@
                 .enter()
                 .append("line")
                 .style("stroke", "#ccc")
-                .style("stroke-width", 1);
+                .style("stroke-width", 1)
+                .style("marker-end",  "url(#suit)") // Modified line ;
         
             var nodes = svg.selectAll("g")
                 .data(jsgraph.nodes)
@@ -132,6 +133,22 @@
                         .container(d3.select("#text" + i))
                         .draw();
                 }
+                
+            svg.append("defs").selectAll("marker")
+                .data(["suit", "licensing", "resolved"])
+                .enter().append("marker")
+                .attr("id", function(d) { return d; })
+                .attr("viewBox", "0 -5 10 10")
+                .attr("refX", 25)
+                .attr("refY", 0)
+                .attr("markerWidth", 6)
+                .attr("markerHeight", 6)
+                .attr("orient", "auto")
+                .append("path")
+                .attr("d", "M0,-5L10,0L0,5 L10,0 L0, -5")
+                .style("stroke", "#4679BD")
+                .style("opacity", "0.6");
+
             
             
             force.on("tick", function() {
@@ -140,6 +157,15 @@
                      .attr("y1", function(d) { return d.source.y; })
                      .attr("x2", function(d) { return d.target.x; })
                      .attr("y2", function(d) { return d.target.y; });
+             
+                for(i = 0; i < jsgraph.links.length; i++) {
+                    var targy = jsgraph.nodes[jsgraph.links[i].target.index].y;
+                    var sorcy = jsgraph.nodes[jsgraph.links[i].source.index].y;
+                    if (sorcy - targy < 80) {
+                    jsgraph.nodes[jsgraph.links[i].target.index].y -= 1;
+                    jsgraph.nodes[jsgraph.links[i].source.index].y += 1;
+                    }
+                }
 
                 rects.attr("x", function(d) { return d.x; })
                      .attr("y", function(d) { return d.y; });
