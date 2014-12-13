@@ -35,59 +35,64 @@
     <script type="text/javascript" src="http://www.d3plus.org/js/d3plus.js"></script>
     <script type="text/javascript">
         
+        var force;
+        
+        var jsgraph = {
+            nodes : [],
+            links : []
+        };
+        
+        
+        var links = []; 
+        
         function logIn() {
                 if (JAVA_READY_FLAG === true) {
                     var bridge = getJAgoraBridge();
                     bridge.logIn(d3.select("#usernameField").node().value, d3.select("#passwordField").node().value);
-                    loadGraph();
+                    clearGraph();
+                    loadGraph(bridge.getThread(2));
                 }
                 else alert("Applet not yet ready.");
             d3.select("#usernameField").property("value", "");
             d3.select("#passwordField").property("value", "");
         }
         
-        var jsgraph = {
-            nodes : [],
-            links : []
-        };
-        function loadGraph() {
+        function loadNodes(d) {
             var bridge = getJAgoraBridge();
-            var graph = bridge.getThread(1);
-            var posts = graph.getNodes();
-            var edges = graph.getAttacks();
-            
-            var edge, i, post, j;
-            
-            for (i = 0; i < posts.length; i++) {
-                jsgraph.nodes.push({post : posts[i]});
-            }
-            
-            for (i = 0; i < edges.length; i++) {
-                edge = edges[i];
-                var target = null, origin = null;
-                for (j = 0; j < posts.length; j++) {
-                    post = posts[j];
-                    if (post.getID().equals(edge.getTarget().getID())) {
-                        target = j;
-                    }
-                    if (post.getID().equals(edge.getOrigin().getID())) {
-                        origin = j;
-                    }
-                    if (target != null && origin != null) {
-                        jsgraph.links.push({source : origin, target : target});
-                        break;
-                    }
+            loadGraph(bridge.getArgumentByID(d.post.getID()))
+        }
+        
+        function clearSVG() {
+            svg.selectAll("*").remove();
+        }
+        
+        function clearGraph() {
+            jsgraph.nodes = [];
+            jsgraph.links = [];
+        }
+        
+        function removePost(d) {
+            for (i = 0; i < jsgraph.nodes.length; i++) {
+                if (jsgraph.nodes[i] == d) {
+                    jsgraph.nodes.splice(i,1);
+                    break;
                 }
-                
             }
             
-            var force = d3.layout.force()
+            loadLinks();
+            refreshSVG();
+        }
+        
+        function refreshSVG() {
+            clearSVG();
+            
+            force = d3.layout.force()
                  .nodes(jsgraph.nodes)
                  .links(jsgraph.links)
                  .size([1000, 540])
                  .linkDistance([150])
                  .linkStrength(0.3)
-                 .gravity(0.001)
+                 .gravity(0.005)
                  .charge([-100])
                  .chargeDistance([300])
                  .start();
@@ -96,9 +101,9 @@
                 .data(jsgraph.links)
                 .enter()
                 .append("line")
-                .style("stroke", "#ccc")
+                .style("stroke", "rgb(255,0,0)")
                 .style("stroke-width", 1)
-                .style("marker-end",  "url(#suit)") // Modified line ;
+                .style("marker-end",  "url(#suit)")
         
             var nodes = svg.selectAll("g")
                 .data(jsgraph.nodes)
@@ -120,13 +125,28 @@
             var numPosts = 0;
             var texts = svg.selectAll("g")
                 .append("text")
-                .text(function(d) {return d.post.getContent().get("Text");})
+                .text(function(d) {return d.post.getText();})
                 .attr("font-size", "11px")
                 .attr("font-family", "sans-serif")
                 .attr("fill", "white")
-                .attr("width", 300)
-                .attr("height", 100)
                 .attr("id", function(d) { return "text" + numPosts++;});
+        
+            var expandButtons = svg.selectAll("g")
+                    .append("rect")
+                    .attr("x", 120)
+                    .attr("y", 50)
+                    .attr("width", 30)
+                    .attr("height", 10)
+                    .style("fill", "blue")
+                    .on("click", loadNodes);
+            
+            var closeButtons = svg.selectAll("g")
+                    .append("rect")
+                    .attr("y", 50)
+                    .attr("width", 30)
+                    .attr("height", 10)
+                    .style("fill", "red")
+                    .on("click", removePost);
              
             for (i = 0; i < numPosts; i++) {
                     d3plus.textwrap()
@@ -153,31 +173,80 @@
             
             force.on("tick", function() {
 
-                edges.attr("x1", function(d) { return d.source.x; })
-                     .attr("y1", function(d) { return d.source.y; })
-                     .attr("x2", function(d) { return d.target.x; })
-                     .attr("y2", function(d) { return d.target.y; });
+                edges.attr("x1", function(d) { return d.source.x + 75; })
+                     .attr("y1", function(d) { return d.source.y + 30; })
+                     .attr("x2", function(d) { return d.target.x + 75; })
+                     .attr("y2", function(d) { return d.target.y + 30; });
              
                 for(i = 0; i < jsgraph.links.length; i++) {
                     var targy = jsgraph.nodes[jsgraph.links[i].target.index].y;
                     var sorcy = jsgraph.nodes[jsgraph.links[i].source.index].y;
                     if (sorcy - targy < 80) {
-                    jsgraph.nodes[jsgraph.links[i].target.index].y -= 1;
-                    jsgraph.nodes[jsgraph.links[i].source.index].y += 1;
+                        jsgraph.nodes[jsgraph.links[i].target.index].y -= 1;
+                        jsgraph.nodes[jsgraph.links[i].source.index].y += 1;
                     }
                 }
-
-                rects.attr("x", function(d) { return d.x; })
-                     .attr("y", function(d) { return d.y; });
+                i = 0;
+                //rects.attr("x", function(d, i) { return d.x; })
+                //     .attr("y", function(d, i) { return d.y;});
+                nodes.attr("transform", function(d) {return "translate("+d.x+","+d.y+")";});
+                //titles.attr("x", function(d) { return d.x; })
+                 //    .attr("y", function(d) { return d.y -5; });
              
-                titles.attr("x", function(d) { return d.x; })
-                     .attr("y", function(d) { return d.y -5; });
-             
-                texts.attr("x", function(d) { return d.x; })
-                     .attr("y", function(d) { return d.y +15; });
-                texts.selectAll("tspan").attr("x", function(d) { return d.x; });
+                //texts.attr("x", function(d) { return d.x; })
+                //     .attr("y", function(d) { return d.y +15; });
+                //texts.selectAll("tspan").attr("x", function(d) { return d.x; });
 
             });
+        }
+        
+        function loadLinks() {
+            for (i = 0; i < links.length; i++) {
+                edge = links[i];
+                var target = null, origin = null;
+                
+                for (j = 0; j < jsgraph.nodes.length; j++) {
+                    post = jsgraph.nodes[j].post;
+                    if (post.getID().equals(edge.getTarget().getID())) {
+                        target = j;
+                    }
+                    if (post.getID().equals(edge.getOrigin().getID())) {
+                        origin = j;
+                    }
+                    if (target != null && origin != null) {
+                        jsgraph.links.push({source : origin, target : target});
+                        break;
+                    }
+                }
+                
+            }
+        }
+        
+        function loadGraph(graph) {
+            
+            
+            var posts = graph.getNodes();
+            var newLinks = graph.getAttacks();
+            var edge, i, post, j, foundNode;
+            
+            for (i = 0; i < newLinks.length; i++) {
+                links.push(newLinks[i]);
+            }
+            
+            for (i = 0; i < posts.length; i++) {
+                foundNode = false;
+                for (j = 0; j < jsgraph.nodes.length; j++) {
+                    if (jsgraph.nodes[j].post.getID().equals(posts[i].getID())) {
+                        foundNode = true;
+                        break;
+                    }
+                }
+                if (!foundNode) jsgraph.nodes.push({post : posts[i]});
+            }
+            
+            loadLinks();
+            
+            refreshSVG();
             
         }
     </script>
