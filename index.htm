@@ -35,15 +35,21 @@
     <script type="text/javascript" src="http://www.d3plus.org/js/d3plus.js"></script>
     <script type="text/javascript">
         
-        var force;
+        var force; //this variable will contai the force layout object.
         
         var jsgraph = {
             nodes : [],
             links : []
-        };
+        }; //these arrays will contain the nodes and links that are i the appropriate 
+           // format to be understood by the force layout.
         
         
-        var links = []; 
+        var links = []; //this array will contain the JAgoraAttack objects after 
+        //they've copied out of JAgoraGraph. We can't just store them in a JAgoraGraph 
+        //cause that doesn;t want to let us delete them, for whatever reason.
+        
+        
+        // This fuction logs us in and loads the forum hub.
         
         function logIn() {
                 if (JAVA_READY_FLAG === true) {
@@ -57,19 +63,29 @@
             d3.select("#passwordField").property("value", "");
         }
         
+        //This function loads the arguments and attacks that are directly related to a argument.
+        
         function loadNodes(d) {
             var bridge = getJAgoraBridge();
             loadGraph(bridge.getArgumentByID(d.post.getID()))
         }
         
+        //This function clears the svg, so we can draw more stuff in it.
+        
         function clearSVG() {
             svg.selectAll("*").remove();
         }
+        
+        //this funcion clears the local javascript graph.
         
         function clearGraph() {
             jsgraph.nodes = [];
             jsgraph.links = [];
         }
+        
+        //this function removes a post from the local javascript graph, reloads 
+        //the links (Which should eliminate any attacks directly related to said 
+        //argument, but doesn't right now), and then re-does the svg display.
         
         function removePost(d) {
             for (i = 0; i < jsgraph.nodes.length; i++) {
@@ -82,6 +98,8 @@
             loadLinks();
             refreshSVG();
         }
+        
+        //this function load the graph and constructs a visua representation.
         
         function refreshSVG() {
             clearSVG();
@@ -200,6 +218,9 @@
             });
         }
         
+        //this function loads takes the links and turns them into javascript 
+        //data that the force layout can make use of.
+        
         function loadLinks() {
             for (i = 0; i < links.length; i++) {
                 edge = links[i];
@@ -221,6 +242,9 @@
                 
             }
         }
+        
+        //this function takes a JAgoraGraph object, copies the data from it, and 
+        //then calls loadLinks() and refreshSVG().
         
         function loadGraph(graph) {
             
