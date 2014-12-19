@@ -90,13 +90,13 @@
         
         function removePost(d) { 
             var i;
-            for (i = 0; i < links.length; i++) {
-                if (links[i].getOrigin().getID().equals(d.post.getID())) {
-                    links.splice(i,1);
+            for (i = 0; i < jsgraph.links.length; i++) {
+                if (jsgraph.links[i].source.post.getID().equals(d.post.getID())) {
+                    jsgraph.links.splice(i,1);
                     continue;
                 }
-                if (links[i].getTarget().getID().equals(d.post.getID())) {
-                    links.splice(i,1);
+                if (jsgraph.links[i].target.post.getID().equals(d.post.getID())) {
+                    jsgraph.links.splice(i,1);
                     continue;
                 }
             }
@@ -108,7 +108,6 @@
                 }
             }
             
-            loadLinks();
             refreshSVG();
         }
         
