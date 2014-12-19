@@ -88,21 +88,22 @@
         //the links (Which should eliminate any attacks directly related to said 
         //argument, but doesn't right now), and then re-does the svg display.
         
-        function removePost(d) {
-            for (i = 0; i < jsgraph.nodes.length; i++) {
-                if (jsgraph.nodes[i] == d) {
-                    jsgraph.nodes.splice(i,1);
-                    break;
-                }
-            }
-            
+        function removePost(d) { 
+            var i;
             for (i = 0; i < links.length; i++) {
                 if (links[i].getOrigin().getID().equals(d.post.getID())) {
                     links.splice(i,1);
-                    break;
+                    continue;
                 }
                 if (links[i].getTarget().getID().equals(d.post.getID())) {
                     links.splice(i,1);
+                    continue;
+                }
+            }
+            
+            for (i = 0; i < jsgraph.nodes.length; i++) {
+                if (jsgraph.nodes[i].post.getID().equals(d.post.getID())) {
+                    jsgraph.nodes.splice(i,1);
                     break;
                 }
             }
@@ -227,17 +228,26 @@
         //data that the force layout can make use of.
         
         function loadLinks() {
+            var i, j, edge, post;
+            mainloop:
             for (i = 0; i < links.length; i++) {
                 edge = links[i];
                 var target = null, origin = null;
+                //ensure there are o duplicate links.
+                for (j = 0; j < jsgraph.links.length; j++) {
+                    if (edge.getTarget().getID().equals(jsgraph.links[j].target.post.getID()) &&
+                        edge.getOrigin().getID().equals(jsgraph.links[j].source.post.getID()))
+                        continue mainloop;
+                }
                 
                 for (j = 0; j < jsgraph.nodes.length; j++) {
                     post = jsgraph.nodes[j].post;
+                    
                     if (post.getID().equals(edge.getTarget().getID())) {
-                        target = j;
+                        target = jsgraph.nodes[j];
                     }
                     if (post.getID().equals(edge.getOrigin().getID())) {
-                        origin = j;
+                        origin = jsgraph.nodes[j];
                     }
                     if (target != null && origin != null) {
                         jsgraph.links.push({source : origin, target : target});
@@ -246,6 +256,7 @@
                 }
                 
             }
+            links = [];
         }
         
         //this function takes a JAgoraGraph object, copies the data from it, and 
@@ -270,7 +281,7 @@
                         break;
                     }
                 }
-                if (!foundNode) jsgraph.nodes.push({post : posts[i]});
+                if (!foundNode) jsgraph.nodes.push({id : posts[i].getID().getLocalID(), post : posts[i]});
             }
             
             loadLinks();
