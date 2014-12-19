@@ -56,6 +56,7 @@
                     var bridge = getJAgoraBridge();
                     bridge.logIn(d3.select("#usernameField").node().value, d3.select("#passwordField").node().value);
                     clearGraph();
+                    links = [];
                     loadGraph(bridge.getThread(2));
                 }
                 else alert("Applet not yet ready.");
@@ -95,6 +96,17 @@
                 }
             }
             
+            for (i = 0; i < links.length; i++) {
+                if (links[i].getOrigin().getID().equals(d.post.getID())) {
+                    links.splice(i,1);
+                    break;
+                }
+                if (links[i].getTarget().getID().equals(d.post.getID())) {
+                    links.splice(i,1);
+                    break;
+                }
+            }
+            
             loadLinks();
             refreshSVG();
         }
@@ -116,17 +128,25 @@
                  .start();
             
             edges = svg.selectAll("line")
-                .data(jsgraph.links)
-                .enter()
+                .data(jsgraph.links);
+        
+            edges.exit().remove();
+        
+            edges.enter()
                 .append("line")
-                .style("stroke", "rgb(255,0,0)")
-                .style("stroke-width", 1)
-                .style("marker-end",  "url(#suit)")
+                .style("stroke", "rgb(255,0,0)");
+        
+            
         
             var nodes = svg.selectAll("g")
-                .data(jsgraph.nodes)
-                .enter()
+                .data(jsgraph.nodes);
+        
+            nodes.exit().remove();
+            
+            nodes.enter()
                 .append("g");
+        
+            
         
             var rects = svg.selectAll("g")
                 .append("rect")
@@ -170,22 +190,7 @@
                     d3plus.textwrap()
                         .container(d3.select("#text" + i))
                         .draw();
-                }
-                
-            svg.append("defs").selectAll("marker")
-                .data(["suit", "licensing", "resolved"])
-                .enter().append("marker")
-                .attr("id", function(d) { return d; })
-                .attr("viewBox", "0 -5 10 10")
-                .attr("refX", 25)
-                .attr("refY", 0)
-                .attr("markerWidth", 6)
-                .attr("markerHeight", 6)
-                .attr("orient", "auto")
-                .append("path")
-                .attr("d", "M0,-5L10,0L0,5 L10,0 L0, -5")
-                .style("stroke", "#4679BD")
-                .style("opacity", "0.6");
+            }
 
             
             
@@ -295,6 +300,8 @@
                     <input type="password" id="passwordField">
 
                     <button type="button" onclick="logIn()">Submit</button>
+                    <button type="button" onclick="refreshSVG()">Reload</button>
+                    <button type="button" onclick="clearSVG()()">Clear</button>
                 </div>
                 <div id="EditPanel" class="tab-pane inactive">
                 </div>
