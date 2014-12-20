@@ -37,18 +37,12 @@
         
         var force; //this variable will contai the force layout object.
         
+        //these arrays will contain the nodes and links that are i the appropriate 
+        // format to be understood by the force layout.
         var jsgraph = {
             nodes : [],
             links : []
-        }; //these arrays will contain the nodes and links that are i the appropriate 
-           // format to be understood by the force layout.
-        
-        
-        var links = []; //this array will contain the JAgoraAttack objects after 
-        //they've copied out of JAgoraGraph. We can't just store them in a JAgoraGraph 
-        //cause that doesn;t want to let us delete them, for whatever reason.
-        
-        
+        };         
         // This fuction logs us in and loads the forum hub.
         
         function logIn() {
@@ -56,7 +50,6 @@
                     var bridge = getJAgoraBridge();
                     bridge.logIn(d3.select("#usernameField").node().value, d3.select("#passwordField").node().value);
                     clearGraph();
-                    links = [];
                     loadGraph(bridge.getThread(2));
                 }
                 else alert("Applet not yet ready.");
@@ -93,11 +86,11 @@
             for (i = 0; i < jsgraph.links.length; i++) {
                 if (jsgraph.links[i].source.post.getID().equals(d.post.getID())) {
                     jsgraph.links.splice(i,1);
-                    continue;
+                    i--;
                 }
                 if (jsgraph.links[i].target.post.getID().equals(d.post.getID())) {
                     jsgraph.links.splice(i,1);
-                    continue;
+                    i--;
                 }
             }
             
@@ -144,7 +137,8 @@
             nodes.exit().remove();
             
             nodes.enter()
-                .append("g");
+                .append("g")
+                .attr("transform", function(d) {return "translate("+1000+","+1000+")";});;
         
             
         
@@ -160,7 +154,7 @@
                 .attr("font-family", "sans-serif")
                 .attr("font-size", "11px");
         
-            var numPosts = 0;
+            var i, numPosts = 0;
             var texts = svg.selectAll("g")
                 .append("text")
                 .text(function(d) {return d.post.getText();})
@@ -168,6 +162,14 @@
                 .attr("font-family", "sans-serif")
                 .attr("fill", "white")
                 .attr("id", function(d) { return "text" + numPosts++;});
+        
+            for (i = 0; i < numPosts; i++) {
+                    d3plus.textwrap()
+                        .container(d3.select("#text" + i))
+                        .width(150)
+                        //.height(60)
+                        .draw();
+            }
         
             var expandButtons = svg.selectAll("g")
                     .append("rect")
@@ -185,12 +187,6 @@
                     .attr("height", 10)
                     .style("fill", "red")
                     .on("click", removePost);
-             
-            for (i = 0; i < numPosts; i++) {
-                    d3plus.textwrap()
-                        .container(d3.select("#text" + i))
-                        .draw();
-            }
 
             
             
@@ -226,13 +222,13 @@
         //this function loads takes the links and turns them into javascript 
         //data that the force layout can make use of.
         
-        function loadLinks() {
+        function loadLinks(links) {
             var i, j, edge, post;
             mainloop:
             for (i = 0; i < links.length; i++) {
                 edge = links[i];
                 var target = null, origin = null;
-                //ensure there are o duplicate links.
+                //ensure there are no duplicate links.
                 for (j = 0; j < jsgraph.links.length; j++) {
                     if (edge.getTarget().getID().equals(jsgraph.links[j].target.post.getID()) &&
                         edge.getOrigin().getID().equals(jsgraph.links[j].source.post.getID()))
@@ -255,7 +251,6 @@
                 }
                 
             }
-            links = [];
         }
         
         //this function takes a JAgoraGraph object, copies the data from it, and 
@@ -268,10 +263,6 @@
             var newLinks = graph.getAttacks();
             var edge, i, post, j, foundNode;
             
-            for (i = 0; i < newLinks.length; i++) {
-                links.push(newLinks[i]);
-            }
-            
             for (i = 0; i < posts.length; i++) {
                 foundNode = false;
                 for (j = 0; j < jsgraph.nodes.length; j++) {
@@ -283,7 +274,7 @@
                 if (!foundNode) jsgraph.nodes.push({id : posts[i].getID().getLocalID(), post : posts[i]});
             }
             
-            loadLinks();
+            loadLinks(newLinks);
             
             refreshSVG();
             
