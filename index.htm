@@ -116,8 +116,9 @@
         
         function newPost() {
             
-            bridge.newArgument(d3.select("#titleField").node().value,
-                               d3.select("#bodyField").node().value, targets);
+            if (bridge.newArgument(d3.select("#titleField").node().value,
+                               d3.select("#bodyField").node().value, targets))
+            loadGraph(bridge.getArgumentByID(targets[0].getID()))
             d3.select("#titleField").property("value", "");
             d3.select("#bodyField").property("value", "");
             targets = [];
@@ -245,10 +246,24 @@
                     .append("circle")
                     .attr("cx", 150)
                     .attr("r", 10)
-                    .style("fill", "green")
+                    .style("fill", function(d) {
+                        for (i = 0; i < targets.length; i++) {
+                            if (targets[i].getID().equals(d.post.getID())) {
+                                return "white";
+                            }
+                        }
+                        
+                        return "green";             
+            })
                     .attr("id", function(d) { return "replyButton" + numPosts++;})
                     .on("click", function (d) {
-                        var index = targets.indexOf(d.post);
+                        var index = -1;
+                        for (i = 0; i < targets.length; i++) {
+                            if (targets[i].getID().equals(d.post.getID())) {
+                                index = i;
+                                break;
+                            }
+                        }
                         if (index == -1) {
                             targets.push(d.post);
                             d3.select("#replyButton"+d.index)
