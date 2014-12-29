@@ -129,7 +129,7 @@
         //the links (Which should eliminate any attacks directly related to said 
         //argument, but doesn't right now), and then re-does the svg display.
         
-        function removePost(d) { 
+        function removePost(d) {
             var i;
             for (i = 0; i < jsgraph.links.length; i++) {
                 if (jsgraph.links[i].source.post.getID().equals(d.post.getID())) {
@@ -152,7 +152,14 @@
             refreshSVG();
         }
         
-        //this function load the graph and constructs a visua representation.
+        function sizeArgument(d) {
+            var size = [0, 0], characters = 0;
+            characters = d.post.getText().length();
+            
+            return size;
+        }
+        
+        //this function load the graph and constructs a visual representation.
         
         function refreshSVG() {
             clearSVG();
@@ -195,10 +202,13 @@
                     return "group" + numPosts++;
                 });
         
+            
+            numPosts = 0;
             var rects = svg.selectAll("g")
                 .append("rect")
                 .attr("width", 150)
                 .attr("height", 60)
+                .attr("id", function(d) { return "rect" + numPosts++;})
                 .call(force.drag);
         
             var titles = svg.selectAll("g")
@@ -220,32 +230,32 @@
             for (i = 0; i < numPosts; i++) {
                     d3plus.textwrap()
                         .container(d3.select("#text" + i))
-                        .width(150)
+                        .width(d3.select("#rect" + i).node().width.baseVal.value)
                         .draw();
             }
         
             var expandButtons = svg.selectAll("g")
                     .append("rect")
-                    .attr("x", 120)
-                    .attr("y", 50)
+                    .attr("x", function(d) {
+                        return d3.select("#rect" + d.index).node().width.baseVal.value -30;
+                    })
+                    .attr("y", function(d) {
+                        return d3.select("#rect" + d.index).node().height.baseVal.value -10;
+                    })
                     .attr("width", 30)
                     .attr("height", 10)
                     .style("fill", "blue")
                     .on("click", loadNodes);
             
-            var closeButtons = svg.selectAll("g")
-                    .append("rect")
-                    .attr("y", 50)
-                    .attr("width", 30)
-                    .attr("height", 10)
-                    .style("fill", "red")
-                    .on("click", removePost);
-
             numPosts = 0;
             var replyButtons = svg.selectAll("g")
-                    .append("circle")
-                    .attr("cx", 150)
-                    .attr("r", 10)
+                    .append("rect")
+                    .attr("y", function(d) {
+                        return d3.select("#rect" + d.index).node().height.baseVal.value -10;
+                    })
+                    .attr("width", 30)
+                    .attr("height", 10)
+                    .attr("id", function(d) { return "replyButton" + numPosts++;})
                     .style("fill", function(d) {
                         for (i = 0; i < targets.length; i++) {
                             if (targets[i].getID().equals(d.post.getID())) {
@@ -254,8 +264,7 @@
                         }
                         
                         return "green";             
-            })
-                    .attr("id", function(d) { return "replyButton" + numPosts++;})
+                    })
                     .on("click", function (d) {
                         var index = -1;
                         for (i = 0; i < targets.length; i++) {
@@ -266,21 +275,30 @@
                         }
                         if (index == -1) {
                             targets.push(d.post);
-                            d3.select("#replyButton"+d.index)
+                            d3.select("#replyButton" + d.index)
                             .style("fill", "white");
                         } else {
                             targets.splice(index, 1);
-                            d3.select("#replyButton"+d.index)
+                            d3.select("#replyButton" + d.index)
                             .style("fill", "green");
-                    }
-            });
+                        }
+                    });
+                    
+            var closeButtons = svg.selectAll("g")
+                    .append("circle")
+                    .attr("cx", function(d) {
+                        return d3.select("#rect" + d.index).node().width.baseVal.value;
+                    })
+                    .attr("r", 10)
+                    .style("fill", "red")
+                    .on("click", removePost);
             
             force.on("tick", function() {
 
-                edges.attr("x1", function(d) { return d.source.x + 75; })
-                     .attr("y1", function(d) { return d.source.y + 30; })
-                     .attr("x2", function(d) { return d.target.x + 75; })
-                     .attr("y2", function(d) { return d.target.y + 30; });
+                edges.attr("x1", function(d) { return d.source.x + d3.select("#rect" + d.source.index).node().width.baseVal.value/2})
+                     .attr("y1", function(d) { return d.source.y + d3.select("#rect" + d.source.index).node().height.baseVal.value/2; })
+                     .attr("x2", function(d) { return d.target.x + d3.select("#rect" + d.target.index).node().width.baseVal.value/2; })
+                     .attr("y2", function(d) { return d.target.y + d3.select("#rect" + d.target.index).node().height.baseVal.value/2; });
              
                 for(i = 0; i < jsgraph.links.length; i++) {
                     var targy = jsgraph.nodes[jsgraph.links[i].target.index].y;
@@ -290,16 +308,7 @@
                         jsgraph.nodes[jsgraph.links[i].source.index].y += 1;
                     }
                 }
-                i = 0;
-                //rects.attr("x", function(d, i) { return d.x; })
-                //     .attr("y", function(d, i) { return d.y;});
                 nodes.attr("transform", function(d) {return "translate("+d.x+","+d.y+")";});
-                //titles.attr("x", function(d) { return d.x; })
-                 //    .attr("y", function(d) { return d.y -5; });
-             
-                //texts.attr("x", function(d) { return d.x; })
-                //     .attr("y", function(d) { return d.y +15; });
-                //texts.selectAll("tspan").attr("x", function(d) { return d.x; });
 
             });
         }
