@@ -34,7 +34,10 @@
     <script type="text/javascript" src="http://www.d3plus.org/js/d3plus.js"></script>
     <script type="text/javascript">
         
-        var force; //this variable will contai the force layout object.
+        var address = "50.97.175.55";
+        var port = 27387;
+        
+        var force; //this variable will contain the force layout object.
         
         //these arrays will contain the nodes and links that are i the appropriate 
         // format to be understood by the force layout.
@@ -63,10 +66,11 @@
         }
 
         // Applet reports it is ready to use
-        function javaSocketBridgeReady(){
-                JAVA_READY_FLAG = true;
-                alert("Applet Ready!");
+        function javaSocketBridgeReady() {
                 bridge = getJAgoraBridge();
+                bridge.startLib(address, port);
+                JAVA_READY_FLAG = true;
+                loadGraph(bridge.getThread(0));
         }
         
         function setAppMode(mode) {
@@ -84,7 +88,6 @@
                 if (JAVA_READY_FLAG === true) {
                     bridge.logIn(d3.select("#usernameField").node().value, d3.select("#passwordField").node().value);
                     clearGraph();
-                    loadGraph(bridge.getThread(2));
                     setAppMode(modeList.reply);
                 }
                 else alert("Applet not yet ready.");
@@ -115,13 +118,15 @@
         //existing posts, and submit.
         
         function newPost() {
-            
-            if (bridge.newArgument(d3.select("#titleField").node().value,
-                               d3.select("#bodyField").node().value, targets))
-            loadGraph(bridge.getArgumentByID(targets[0].getID()))
-            d3.select("#titleField").property("value", "");
-            d3.select("#bodyField").property("value", "");
-            targets = [];
+            if (JAVA_READY_FLAG === true && targets.length > 0) {
+                if (bridge.newArgument(d3.select("#titleField").node().value,
+                                   d3.select("#bodyField").node().value, targets)) {
+                    loadGraph(bridge.getArgumentByID(targets[0].getID()))
+                    d3.select("#titleField").property("value", "");
+                    d3.select("#bodyField").property("value", "");
+                    targets = [];
+            }
+            }
             
         }
         
@@ -153,9 +158,8 @@
         }
         
         function sizeArgument(d) {
-            var size = [0, 0], characters = 0;
-            characters = d.post.getText().length();
-            
+            var size = [150, 60], characters = 0;
+            characters = d.post.getText().length;
             return size;
         }
         
@@ -206,9 +210,11 @@
             numPosts = 0;
             var rects = svg.selectAll("g")
                 .append("rect")
-                .attr("width", 150)
-                .attr("height", 60)
-                .attr("id", function(d) { return "rect" + numPosts++;})
+                .attr("width", function(d) {
+                    return sizeArgument(d)[0];
+                }).attr("height", function(d) {
+                    return sizeArgument(d)[1];
+                }).attr("id", function(d) { return "rect" + numPosts++;})
                 .call(force.drag);
         
             var titles = svg.selectAll("g")
