@@ -34,7 +34,6 @@
     <script type="text/javascript" src="http://www.d3plus.org/js/d3plus.js"></script>
     <script type="text/javascript">
         
-        var address = "50.97.175.55";
         var port = 27387;
         
         var force; //this variable will contain the force layout object.
@@ -64,13 +63,12 @@
         function getJAgoraBridge(){
                 return document.getElementById('JAgoraJSBridge');
         }
-
         // Applet reports it is ready to use
         function javaSocketBridgeReady() {
                 bridge = getJAgoraBridge();
-                bridge.startLib(address, port);
+                bridge.startLib();
                 JAVA_READY_FLAG = true;
-                loadGraph(bridge.getThread(0));
+                loadGraph(bridge.getArgumentByID(bridge.findArgument(43)));
         }
         
         function setAppMode(mode) {
@@ -125,7 +123,7 @@
                     d3.select("#titleField").property("value", "");
                     d3.select("#bodyField").property("value", "");
                     targets = [];
-            }
+                }
             }
             
         }
