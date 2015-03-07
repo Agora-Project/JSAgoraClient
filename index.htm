@@ -47,7 +47,8 @@
         
         var modeList = {
             login : 1,
-            reply : 2
+            reply : 2,
+            register: 3
         };
         
         //this variable is for storing the list of posts that a new post is in reply to.
@@ -75,22 +76,46 @@
             if (mode == modeList.login) {
                 d3.select("#LoginPanel").classed("inactive", false);
                 d3.select("#ReplyPanel").classed("inactive", true);
+                d3.select("#RegisterPanel").classed("inactive", true);
             } else if (mode == modeList.reply) {
                 d3.select("#LoginPanel").classed("inactive", true);
                 d3.select("#ReplyPanel").classed("inactive", false);
+                d3.select("#RegisterPanel").classed("inactive", true);
+            } else if (mode == modeList.register) {
+                d3.select("#LoginPanel").classed("inactive", true);
+                d3.select("#ReplyPanel").classed("inactive", true);
+                d3.select("#RegisterPanel").classed("inactive", false);
             }
         }
-        // This fuction logs us in and loads the forum hub.
         
-        function logIn() {
-                if (JAVA_READY_FLAG === true) {
-                    bridge.logIn(d3.select("#usernameField").node().value, d3.select("#passwordField").node().value);
-                    clearGraph();
+        //This function registers a new user for the forum.
+        function register() {
+            if (d3.select("#registerPasswordField").node().value !== 
+                d3.select("#confirmPasswordField").node().value) {
+                alert("Passwords do not match.");
+                return;
+            }
+            if (JAVA_READY_FLAG === true) {
+                    bridge.register(d3.select("#registerUsernameField").node().value, 
+                                    d3.select("#registerPasswordField").node().value,
+                                    d3.select("#registerEmailField").node().value);
                     setAppMode(modeList.reply);
-                }
-                else alert("Applet not yet ready.");
-            d3.select("#usernameField").property("value", "");
-            d3.select("#passwordField").property("value", "");
+                    d3.select("#registerUsernameField").property("value", "");
+                    d3.select("#registerPasswordField").property("value", "");
+                    d3.select("#registerEmailField").property("value", "");
+                    d3.select("#confirmPasswordField").property("value", "");
+            } else alert("Applet not yet ready.");
+        }
+        
+        // This fuction logs us in and loads the forum hub.
+        function logIn() {
+            if (JAVA_READY_FLAG === true) {
+                bridge.logIn(d3.select("#usernameField").node().value, d3.select("#passwordField").node().value);
+                setAppMode(modeList.reply);
+                d3.select("#usernameField").property("value", "");
+                d3.select("#passwordField").property("value", "");
+            }
+            else alert("Applet not yet ready.");
         }
         
         //This function loads the arguments and attacks that are directly related to a argument.
@@ -387,6 +412,7 @@
         <div id="modeSelect" class="btn-group">
             <button type="button" onclick="setAppMode(modeList.login)">Login</button>
             <button type="button" onclick="setAppMode(modeList.reply)">Reply</button>
+            <button type="button" onclick="setAppMode(modeList.register)">Register</button>
         </div>
         <div id="AppBody">
             <div id="InputPanel" class="panel tab-content">
@@ -414,6 +440,28 @@
                     <button type="button" onclick="newPost()">Submit</button>
                     
                     <button type="button" onclick="refreshSVG()">Refresh Graph</button>
+                </div>
+                <div id="RegisterPanel" class="tab-pane inactive">
+                    Login
+                    <p></p>
+
+                    UserName:
+
+                    <input type="text" id="registerUsernameField"> <p></p>
+                    
+                    Email:
+
+                    <input type="text" id="registerEmailField"><p></p>
+
+                    Password:
+
+                    <input type="password" id="registerPasswordField"><p></p>
+                    
+                    Confirm Password:
+
+                    <input type="password" id="confirmPasswordField"><p></p>
+
+                    <button type="button" onclick="register()">Submit</button>
                 </div>
             </div>
             <div id="GraphPanel">
