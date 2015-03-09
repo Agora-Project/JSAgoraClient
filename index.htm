@@ -5,6 +5,7 @@
         .inactive {
             display: none;
         } 
+        
         #AppBody {
             border: 1px solid #e3e3e3;
             border-radius: 4px;
@@ -13,6 +14,7 @@
             position: relative;
             overflow: hidden;
         }
+        
         #InputPanel {
             width: 280px;
             height: 500px;
@@ -23,6 +25,7 @@
             position: absolute;
             left: 0;
         } 
+        
         #GraphPanel {
             width: 1000px;
             height: 540px;
@@ -121,7 +124,7 @@
         //This function loads the arguments and attacks that are directly related to a argument.
         
         function loadNodes(d) {
-            loadGraph(bridge.getArgumentByID(d.post.getID()))
+            loadGraph(bridge.getArgumentByID(d))
         }
         
         //This function clears the svg, so we can draw more stuff in it.
@@ -142,13 +145,12 @@
         
         function newPost() {
             if (JAVA_READY_FLAG === true && targets.length > 0) {
-                if (bridge.newArgument(d3.select("#titleField").node().value,
-                                   d3.select("#bodyField").node().value, targets)) {
-                    loadGraph(bridge.getArgumentByID(targets[0].getID()))
-                    d3.select("#titleField").property("value", "");
-                    d3.select("#bodyField").property("value", "");
-                    targets = [];
-                }
+                var post = bridge.newArgument(d3.select("#titleField").node().value,
+                                   d3.select("#bodyField").node().value, targets);
+                loadNodes(post);
+                d3.select("#titleField").property("value", "");
+                d3.select("#bodyField").property("value", "");
+                targets = [];
             }
             
         }
@@ -274,7 +276,9 @@
                     .attr("width", 30)
                     .attr("height", 10)
                     .style("fill", "blue")
-                    .on("click", loadNodes);
+                    .on("click", function(d) {
+                        loadNodes(d.post.getID());
+                    });
             
             numPosts = 0;
             var replyButtons = svg.selectAll("g")
