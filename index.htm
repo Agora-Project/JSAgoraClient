@@ -197,7 +197,6 @@
                  .nodes(jsgraph.nodes)
                  .links(jsgraph.links)
                  .size([1000, 540])
-                 .linkDistance([150])
                  .linkStrength(0.3)
                  .gravity(0.005)
                  .charge([-100])
@@ -233,7 +232,7 @@
         
             
             numPosts = 0;
-            var rects = svg.selectAll("g")
+             var rects = svg.selectAll("g")
                 .append("rect")
                 .attr("width", function(d) {
                     return sizeArgument(d)[0];
@@ -259,26 +258,26 @@
                 .attr("id", function(d) { return "text" + numPosts++;});
         
             for (i = 0; i < numPosts; i++) {
-                    d3plus.textwrap()
-                        .container(d3.select("#text" + i))
-                        .width(d3.select("#rect" + i).node().width.baseVal.value)
-                        .draw();
+                d3plus.textwrap()
+                    .container(d3.select("#text" + i))
+                    .width(d3.select("#rect" + i).node().width.baseVal.value)
+                    .draw();
             }
         
             var expandButtons = svg.selectAll("g")
-                    .append("rect")
-                    .attr("x", function(d) {
-                        return d3.select("#rect" + d.index).node().width.baseVal.value -30;
-                    })
-                    .attr("y", function(d) {
-                        return d3.select("#rect" + d.index).node().height.baseVal.value -10;
-                    })
-                    .attr("width", 30)
-                    .attr("height", 10)
-                    .style("fill", "blue")
-                    .on("click", function(d) {
-                        loadNodes(d.post.getID());
-                    });
+                .append("rect")
+                .attr("x", function(d) {
+                    return d3.select("#rect" + d.index).node().width.baseVal.value -30;
+                })
+                .attr("y", function(d) {
+                    return d3.select("#rect" + d.index).node().height.baseVal.value -10;
+                })
+                .attr("width", 30)
+                .attr("height", 10)
+                .style("fill", "blue")
+                .on("click", function(d) {
+                    loadNodes(d.post.getID());
+                });
             
             numPosts = 0;
             var replyButtons = svg.selectAll("g")
@@ -343,7 +342,19 @@
                 }
                 nodes.attr("transform", function(d) {return "translate("+d.x+","+d.y+")";});
 
-            });
+            })
+            .stop()
+            .linkDistance(function(d) {
+                var rectw = d3.select("#rect" + d.source.index).node().width.baseVal.value;
+                var recth = d3.select("#rect" + d.source.index).node().height.baseVal.value;
+                var linkLength = Math.sqrt((rectw ^ 2) + (recth ^ 2));
+                rectw = d3.select("#rect" + d.target.index).node().width.baseVal.value;
+                recth = d3.select("#rect" + d.target.index).node().height.baseVal.value;
+                linkLength += Math.sqrt((rectw ^ 2) + (recth ^ 2));
+                linkLength *= 8;
+                return linkLength;
+            })
+            .start();
         }
         
         //this function loads takes the links and turns them into javascript 
