@@ -51,7 +51,8 @@
         var modeList = {
             login : 1,
             reply : 2,
-            register: 3
+            register: 3,
+            moderate: 4
         };
         
         //this variable is for storing the list of posts that a new post is in reply to.
@@ -80,14 +81,22 @@
                 d3.select("#LoginPanel").classed("inactive", false);
                 d3.select("#ReplyPanel").classed("inactive", true);
                 d3.select("#RegisterPanel").classed("inactive", true);
+                d3.select("#ModeratorPanel").classed("inactive", true);
             } else if (mode == modeList.reply) {
                 d3.select("#LoginPanel").classed("inactive", true);
                 d3.select("#ReplyPanel").classed("inactive", false);
                 d3.select("#RegisterPanel").classed("inactive", true);
+                d3.select("#ModeratorPanel").classed("inactive", true);
             } else if (mode == modeList.register) {
                 d3.select("#LoginPanel").classed("inactive", true);
                 d3.select("#ReplyPanel").classed("inactive", true);
                 d3.select("#RegisterPanel").classed("inactive", false);
+                d3.select("#ModeratorPanel").classed("inactive", true);
+            } else if (mode == modeList.moderate) {
+                d3.select("#LoginPanel").classed("inactive", true);
+                d3.select("#ReplyPanel").classed("inactive", true);
+                d3.select("#RegisterPanel").classed("inactive", true);
+                d3.select("#ModeratorPanel").classed("inactive", false);
             }
         }
         
@@ -117,9 +126,21 @@
                 setAppMode(modeList.reply);
                 d3.select("#usernameField").property("value", "");
                 d3.select("#passwordField").property("value", "");
+                if (bridge.isModerator())
+                    d3.select("#moderatorButton").classed("inactive", false);
             }
             else alert("Applet not yet ready.");
         }
+        
+        //this function is for moderators. It lets them delete spam posts.
+        
+        function deletePosts() {
+            bridge.deletePosts(targets);
+            for (post in targets) removePost(post);
+            targets = [];
+            refreshSVG();
+        }
+            
         
         //This function loads the arguments and attacks that are directly related to a argument.
         
@@ -347,11 +368,11 @@
             .linkDistance(function(d) {
                 var rectw = d3.select("#rect" + d.source.index).node().width.baseVal.value;
                 var recth = d3.select("#rect" + d.source.index).node().height.baseVal.value;
-                var linkLength = Math.sqrt((rectw ^ 2) + (recth ^ 2));
+                var linkLength = Math.sqrt((rectw * rectw) + (recth * recth));
                 rectw = d3.select("#rect" + d.target.index).node().width.baseVal.value;
                 recth = d3.select("#rect" + d.target.index).node().height.baseVal.value;
-                linkLength += Math.sqrt((rectw ^ 2) + (recth ^ 2));
-                linkLength *= 8;
+                linkLength += Math.sqrt((rectw * rectw) + (recth * recth));
+                linkLength *= .75;
                 return linkLength;
             })
             .start();
@@ -425,9 +446,11 @@
     <div>
         <applet id="JAgoraJSBridge" archive="JAgoraLib.jar" code="org.agora.lib.JAgoraJSBridge.class" width="1" height="1"></applet>
         <div id="modeSelect" class="btn-group">
+            <a href="http://angle.webfactional.com">Home</a>
             <button type="button" onclick="setAppMode(modeList.login)">Login</button>
             <button type="button" onclick="setAppMode(modeList.reply)">Reply</button>
             <button type="button" onclick="setAppMode(modeList.register)">Register</button>
+            <button id="moderatorButton" type="button" class="inactive" onclick="setAppMode(modeList.moderate)">Moderate</button>
         </div>
         <div id="AppBody">
             <div id="InputPanel" class="panel tab-content">
@@ -477,6 +500,9 @@
                     <input type="password" id="confirmPasswordField"><p></p>
 
                     <button type="button" onclick="register()">Submit</button>
+                </div>
+                <div id="ModeratorPanel" class="tab-pane inactive">
+                    <button type="button" onclick="deletePosts()">Delete</button>
                 </div>
             </div>
             <div id="GraphPanel">
