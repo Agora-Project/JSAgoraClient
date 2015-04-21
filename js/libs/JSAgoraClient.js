@@ -13,8 +13,6 @@
 //    You should have received a copy of the GNU General Public License along
 //    with this program; if not, write to the Free Software Foundation, Inc.,
 //    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-    
-        var port = 27387;
         
         var force; //this variable will contain the force layout object.
         
@@ -40,7 +38,9 @@
         // Global variables
         var JAVA_READY_FLAG = false;
         
-        var lib = new JSAgoraLib(document.URL);
+        var libContainer = require('JSAgoraLib');
+        
+        var lib = new libContainer.JSAgoraLib(document.URL + "JAgoraHttpServer");
 
         // Get the applet object
 //        function getJAgoraBridge(){
