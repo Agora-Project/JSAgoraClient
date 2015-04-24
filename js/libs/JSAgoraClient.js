@@ -38,9 +38,7 @@
         // Global variables
         var JAVA_READY_FLAG = false;
         
-        var libContainer = require('JSAgoraLib');
-        
-        var lib = new libContainer.JSAgoraLib(document.URL + "JAgoraHttpServer");
+        var lib = new JSAgoraLib(document.URL + "JAgoraHttpServer");
 
         // Get the applet object
 //        function getJAgoraBridge(){
