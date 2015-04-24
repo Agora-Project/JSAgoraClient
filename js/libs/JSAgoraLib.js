@@ -62,14 +62,14 @@ JSAgoraLib = function(url) {
     this.sessionID = null;
     this.usertype = -1;
     this.url = url;
-//    this.xmlHttp = null;
+    this.xmlHttp = null;
     
-//    this.openConnection = function(Url, process) {
-//        this.xmlHttp = new XMLHttpRequest(); 
-//        this.xmlHttp.open("POST", Url, true);
-//        this.xmlHttp.onreadystatechange = process;
-//        return true;
-//    };
+    this.openConnection = function(Url, process) {
+        this.xmlHttp = new XMLHttpRequest(); 
+        this.xmlHttp.open("POST", Url, true);
+        this.xmlHttp.onreadystatechange = process;
+        return true;
+    };
     
     this.constructLoginRequest = function(user, password) {
         bson = {};
@@ -102,12 +102,12 @@ JSAgoraLib = function(url) {
    */
     this.login = function(user, password) {
         // TODO: Can't differentiate between what happened. Make return int?
-//        if (!this.openConnection(url, this.loginResponse())) {
-//            alert("[JSAgoraLib] Could not connect because socket could not be opened.");
-//            return false;
-//        }
+        if (!this.openConnection(url, this.loginResponse())) {
+            alert("[JSAgoraLib] Could not connect because socket could not be opened.");
+            return false;
+        }
 
-        var success = JSAgoraComms.writeBSONObjectToHTTP(this.url,
+        var success = JSAgoraComms.writeBSONObjectToHTTP(this.xmlHttp,
                 this.constructLoginRequest(user, password), this.loginResponse());
         if (!success) {
             alert("[JSAgoraLib] Could not send login message.");
@@ -115,9 +115,9 @@ JSAgoraLib = function(url) {
         }
     };
     
-    this.loginResponse = function(data, status) {
+    this.loginResponse = function() {
 
-        var response = JSAgoraComms.readBSONObjectFromHTTP(data, status);
+        var response = JSAgoraComms.readBSONObjectFromHTTP(this.xmlHttp);
         if (response == null) {
             alert("[JSAgoraLib] Could not read login response.");
             return false;
@@ -313,9 +313,9 @@ deBSONiseEdge = function(bsonEdge, graph) {
 }
 
 JSAgoraComms = {
-    readBSONObjectFromHTTP: function(data, status) {
+    readBSONObjectFromHTTP: function(connection) {
         try {
-            var buf = data;
+            var buf = connection.response;
             alert(buf);
             return BSON.deserialize(buf);
         } catch (ex) {
@@ -323,19 +323,20 @@ JSAgoraComms = {
         }
         return null;
     },
-    writeBSONObjectToHTTP: function(url, bson, process) {
+    writeBSONObjectToHTTP: function(connection, bson) {
         try {
-//          $.post(url, bson, process);
-            $.ajax({
-                type: "POST",
-                url: url,
-                data: BSON.serialize(bson)
-            })
-            .done(process)
-            .fail(function (jqXHR, textStatus, errorThrown) { alert('no go.'); });
-          return true;
+//            $.ajax({
+//                type: "POST",
+//                url: url,
+//                contentType: "application/binary",
+//                data: BSON.serialize(bson)
+//            })
+//            .done(process)
+//            .fail(function (jqXHR, textStatus, errorThrown) { alert('no go.'); });
+            connection.send(BSON.serialize(bson));
+            return true;
         } catch (e) {
-          alert("[JSAgoraComms] Could not write BSON object to socket: " + e);
+            alert("[JSAgoraComms] Could not write BSON object to socket: " + e);
         }
 
         return false;
