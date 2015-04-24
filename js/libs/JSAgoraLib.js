@@ -117,7 +117,7 @@ JSAgoraLib = function(url) {
     
     this.loginResponse = function(data, status) {
 
-        var response = JSAgoraComms.readBSONObjectFromHTTP(data);
+        var response = JSAgoraComms.readBSONObjectFromHTTP(data, status);
         if (response == null) {
             alert("[JSAgoraLib] Could not read login response.");
             return false;
@@ -324,13 +324,20 @@ JSAgoraComms = {
         return null;
     },
     writeBSONObjectToHTTP: function(url, bson, process) {
-    try {
-      $.post(url, bson, process);
-      return true;
-    } catch (e) {
-      alert("[JSAgoraComms] Could not write BSON object to socket: " + e);
+        try {
+//          $.post(url, bson, process);
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: BSON.serialize(bson)
+            })
+            .done(process)
+            .fail(function (jqXHR, textStatus, errorThrown) { alert('no go.'); });
+          return true;
+        } catch (e) {
+          alert("[JSAgoraComms] Could not write BSON object to socket: " + e);
+        }
+
+        return false;
     }
-    
-    return false;
-  }
 };
