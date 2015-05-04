@@ -101,7 +101,7 @@
                 setAppMode(modeList.reply);
                 d3.select("#usernameField").property("value", "");
                 d3.select("#passwordField").property("value", "");
-                if (bridge.isModerator())
+                if (lib.isModerator())
                     d3.select("#moderatorButton").classed("inactive", false);
             }
         }
@@ -119,7 +119,7 @@
         //This function loads the arguments and attacks that are directly related to a argument.
         
         function loadNodes(d) {
-            loadGraph(bridge.getArgumentByID(d))
+            loadGraph(lib.getArgumentByID(d))
         }
         
         //This function clears the svg, so we can draw more stuff in it.
@@ -186,6 +186,7 @@
         //this function load the graph and constructs a visual representation.
         
         function refreshSVG() {
+            loadGraph();
             clearSVG();
             
             force = d3.layout.force()
@@ -391,7 +392,7 @@
         
         function loadGraph(graph) {
             
-            
+            if (graph == null) graph = lib.getArgumentByID(new JSAgoraArgumentID(lib.url, 43));
             var posts = graph.getNodes();
             var newLinks = graph.getAttacks();
             var edge, i, post, j, foundNode;
