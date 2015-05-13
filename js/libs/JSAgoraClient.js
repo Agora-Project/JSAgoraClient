@@ -391,26 +391,27 @@
         //then calls loadLinks() and refreshSVG().
         
         function loadGraph(graph) {
-            
-            if (graph == null) graph = lib.getArgumentByID(new JSAgoraArgumentID(lib.url, 43));
-            var posts = graph.getNodes();
-            var newLinks = graph.getAttacks();
-            var edge, i, post, j, foundNode;
-            
-            for (i = 0; i < posts.length; i++) {
-                foundNode = false;
-                for (j = 0; j < jsgraph.nodes.length; j++) {
-                    if (jsgraph.nodes[j].post.getID().equals(posts[i].getID())) {
-                        foundNode = true;
-                        break;
-                    }
-                }
-                if (!foundNode) jsgraph.nodes.push({post : posts[i]});
-            }
-            
-            loadLinks(newLinks);
-            
-            refreshSVG();
-            
+		lib.getArgumentByID(new JSAgoraArgumentID(lib.url, 43), function(graph) {
+		    var posts = graph.getNodes();
+		    var newLinks = graph.getAttacks();
+		    var edge, i, post, j, foundNode;
+		    
+		    for (i = 0; i < posts.length; i++) {
+		        foundNode = false;
+		        for (j = 0; j < jsgraph.nodes.length; j++) {
+		            if (jsgraph.nodes[j].post.getID().equals(posts[i].getID())) {
+		                foundNode = true;
+		                break;
+		            }
+		        }
+		        if (!foundNode) jsgraph.nodes.push({post : posts[i]});
+		    }
+		    
+		    loadLinks(newLinks);
+		    
+		    refreshSVG();
+
+		});
+            //if (graph == null) graph = lib.getArgumentByID(new JSAgoraArgumentID(lib.url, 43));
         }
         

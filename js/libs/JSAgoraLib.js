@@ -170,34 +170,40 @@ JSAgoraLib = function(url) {
         return deBSONiseGraph(bson[IJSAgoraLib.GRAPH_FIELD]);
     }
     
-    this.getArgumentByID = function(id) {
-        if (!this.openConnection()) {
-            console.log("[JAgoraHTTPLib] Could not connect because connection could not be opened.");
-            return null;
-        }
+    this.getArgumentByID = function(id, callback) {
+        var xmlhttp = new XMLHttpRequest(); 
+	var self = this;
+        xmlhttp.open("POST", self.url, true);
+	xmlhttp.responseType = "blob";
+	xmlhttp.onreadystatechange=function() {
+		if (xmlhttp.readyState==4 && xmlhttp.status==200) {
+			var reader = new FileReader();
+			reader.addEventListener("loadend", function() {
+				// reader.result contains the contents of blob as a typed array
+				var response = BSON.deserialize(new Uint8Array(reader.result));
 
-        var success = JSAgoraComms.writeBSONObjectToHTTP(this.xmlHttp, 
-                    this.constructGetArgumentByIDRequest(id));
-        if (!success) {
-            console.log("[JAgoraHTTPLib] Could not write getThreadByArgumentID query.");
-            return null;
-        }
+				if (response == null) {
+				    console.log("[JAgoraHTTPLib] Could not read getThreadByArgumentID response.");
+				    return null;
+				}
 
-        var response = JSAgoraComms.readBSONObjectFromHTTP(this.xmlHttp);
-        if (response == null) {
-            console.log("[JAgoraHTTPLib] Could not read getThreadByArgumentID response.");
-            return null;
-        }
+				console.log('BSON received:');
+				console.log(response);
 
-        var graph = this.parseGetArgumentByIDResponse(response);
+				var graph = self.parseGetArgumentByIDResponse(response);
 
-        var success = (graph != null);
-        if (!success) {
-            console.log("[JAgoraHTTPLib] Could not getThreadByArgumentID.");
-            return null;
-        }
+				var success = (graph != null);
+				if (!success) {
+				    console.log("[JAgoraHTTPLib] Could not getThreadByArgumentID.");
+				    return null;
+				}
+				callback(graph);
 
-        return graph;
+			});
+			reader.readAsArrayBuffer(xmlhttp.response);
+		}
+	}
+        xmlhttp.send(BSON.serialize(self.constructGetArgumentByIDRequest(id)));
     }
 }
 
@@ -371,17 +377,17 @@ deBSONiseGraph = function(bsonGraph) {
     var nodes = bsonGraph.nodes;
     var n;
     for (n in nodes)
-      graph.addNode(deBSONiseNode(n));
+      graph.addNode(deBSONiseNode(nodes[n]));
 
     var e, edges = bsonGraph.edges;
     for (e in edges)
-      graph.addEdge(deBSONiseEdge(e, graph));
+      graph.addEdge(deBSONiseEdge(edges[e], graph));
 
     return graph;
 }
 
 JSAgoraComms = {
-    readBSONObjectFromHTTP: function(connection) {
+    readBSONObjectFromHTTP: function(connection, callback) {
         try {
             var response = connection.response;
             var encoder = new TextEncoder("utf-8");
